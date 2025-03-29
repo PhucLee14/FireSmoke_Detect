@@ -82,21 +82,6 @@ model = torch.hub.load(
     skip_validation=True
 )
 
-def run_detection(image: Image.Image):
-    """
-    Chạy nhận diện trên ảnh đầu vào và trả về ảnh kết quả.
-    """
-    results = model(image)  # Dự đoán với YOLOv5
-    results.render()  # Vẽ bounding boxes lên ảnh
-
-    # Chuyển ảnh kết quả sang định dạng có thể gửi về frontend
-    img_arr = np.array(image)
-    for img in results.ims:
-        img_arr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-
-    _, encoded_img = cv2.imencode(".jpg", img_arr)
-    return encoded_img.tobytes()
-
 def convert_to_h264(input_file, output_file):
     """
     Chuyển đổi video sang codec H.264 bằng FFmpeg.
@@ -117,30 +102,36 @@ def convert_to_h264(input_file, output_file):
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Lỗi khi chuyển đổi video sang H.264: {e}")
 
+def run_detection(image: Image.Image):
+    """
+    Chạy nhận diện trên ảnh đầu vào và trả về ảnh kết quả.
+    """
+    results = model(image)  # Dự đoán với YOLOv5
+    results.render()  # Vẽ bounding boxes lên ảnh
+
+    # Chuyển ảnh kết quả sang định dạng có thể gửi về frontend
+    img_arr = np.array(image)
+    for img in results.ims:
+        img_arr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+    _, encoded_img = cv2.imencode(".jpg", img_arr)
+    return encoded_img.tobytes()
+
 def run_video_detection(video_path):
     """
     Chạy nhận diện trên video và lưu video đã xử lý.
     """
-    model = torch.hub.load(
-        "ultralytics/yolov5",
-        "custom",
-        path="best.pt",
-        force_reload=True,
-        skip_validation=True
-    )
-
+    global model  # Giả định model đã được tải trước
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise ValueError("Cannot open video file")
 
-    # Lấy thông số video
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    # Lưu kết quả vào file tạm
     temp_output = tempfile.NamedTemporaryFile(delete=False, suffix=".avi")
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Sử dụng XVID tạm thời
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out = cv2.VideoWriter(temp_output.name, fourcc, fps, (width, height))
 
     while True:
@@ -148,20 +139,23 @@ def run_video_detection(video_path):
         if not ret:
             break
 
-        results = model(frame)  # Chạy nhận diện YOLO
-        results.render()  # Vẽ bounding boxes lên ảnh
+        # Chuyển sang RGB để đồng bộ với ảnh
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = model(frame_rgb)  # Chạy nhận diện
+        results.render()
 
-        out.write(results.ims[0])  # Lưu frame đã xử lý vào video
+        # Chuyển lại BGR để ghi video
+        frame_bgr = cv2.cvtColor(results.ims[0], cv2.COLOR_RGB2BGR)
+        out.write(frame_bgr)
 
     cap.release()
     out.release()
     cv2.destroyAllWindows()
 
-    # Chuyển đổi video tạm sang H.264
     final_output = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name
     convert_to_h264(temp_output.name, final_output)
 
-    return final_output  # Trả về đường dẫn file kết quả
+    return final_output
 
 @smart_inference_mode()
 def run(
