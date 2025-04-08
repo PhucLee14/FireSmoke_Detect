@@ -6,6 +6,7 @@ const FireDetection = () => {
     const [preview, setPreview] = useState(null); // Hiển thị file tải lên
     const [result, setResult] = useState(null); // Hiển thị kết quả (ảnh hoặc video)
     const [fileType, setFileType] = useState(null); // Lưu trữ loại file (image/video)
+    const [webcamActive, setWebcamActive] = useState(false); // Trạng thái webcam
 
     // Xử lý khi người dùng chọn file
     const handleFileChange = (e) => {
@@ -59,9 +60,30 @@ const FireDetection = () => {
         }
     };
 
+    // Bật webcam và phát hiện từ camera
+    const handleWebcamDetection = async () => {
+        try {
+            setWebcamActive(true); // Kích hoạt trạng thái webcam
+            const response = await axios.get(
+                "http://localhost:8000/detect/webcam/"
+            );
+            alert(response.data.message); // Hiển thị thông báo từ server
+        } catch (error) {
+            console.error("Error starting webcam detection:", error);
+            alert("An error occurred while starting webcam detection.");
+        }
+    };
+
+    const handleStopWebcamDetection = () => {
+        setWebcamActive(false); // Tắt trạng thái webcam
+        alert("Webcam detection stopped.");
+    };
+
     return (
         <div style={{ textAlign: "center", marginTop: "20px" }}>
             <h1>Fire Detection</h1>
+
+            {/* Upload file */}
             <input
                 type="file"
                 accept="image/*,video/*"
@@ -81,10 +103,41 @@ const FireDetection = () => {
             </div>
             <button
                 onClick={handleUpload}
-                style={{ padding: "10px 20px", fontSize: "16px" }}
+                style={{
+                    padding: "10px 20px",
+                    fontSize: "16px",
+                    marginRight: "10px",
+                }}
             >
-                Detect Fire
+                Detect Fire (File)
             </button>
+
+            {/* Webcam detection */}
+            <button
+                onClick={handleWebcamDetection}
+                style={{
+                    padding: "10px 20px",
+                    fontSize: "16px",
+                    marginRight: "10px",
+                }}
+            >
+                Detect Fire (Webcam)
+            </button>
+            {webcamActive && (
+                <button
+                    onClick={handleStopWebcamDetection}
+                    style={{
+                        padding: "10px 20px",
+                        fontSize: "16px",
+                        backgroundColor: "red",
+                        color: "white",
+                    }}
+                >
+                    Stop Webcam Detection
+                </button>
+            )}
+
+            {/* Hiển thị kết quả */}
             <div style={{ margin: "20px" }}>
                 {result && (
                     <div>
@@ -101,6 +154,16 @@ const FireDetection = () => {
                     </div>
                 )}
             </div>
+
+            {/* Webcam status */}
+            {webcamActive && (
+                <div style={{ marginTop: "20px", color: "green" }}>
+                    <h3>
+                        Webcam detection is active. Check the server window for
+                        results.
+                    </h3>
+                </div>
+            )}
         </div>
     );
 };
