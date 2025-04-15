@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+    backend-yolov8:
+        build:
+            context: ./yolov8
+            dockerfile: Dockerfile
+        ports:
+            - "8000:8000"
+        volumes:
+            - ./yolov8:/app
+            - /tmp:/tmp
+        environment:
+            - PYTHONUNBUFFERED=1
+
+    frontend:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+        ports:
+            - "3001:3001"
+        volumes:
+            - ./frontend:/app
+            - /app/node_modules
+        stdin_open: true
+        environment:
+            - CHOKIDAR_USEPOLLING=true
+        depends_on:
+            - backend-yolov8
+
+    mongo:
+        image: mongo:5
+        container_name: mongodb_fire_detection
+        ports:
+            - "27017:27017"
+        volumes:
+            - mongo-data:/data/db
+
+volumes:
+    mongo-data:
