@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from passlib.context import CryptContext
-from datetime import timedelta
 from app.models.authModel import User as UserModel
 from app.models.authSchemas import UserCreate, UserResponse, UserLogin
 from app.db.configurations import users_collection
 from app.utils.generateToken import create_access_token, set_cookie
+from bson import ObjectId
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -59,7 +59,6 @@ async def register(user: UserCreate):
 
 
 # Login user
-from bson import ObjectId
 
 @router.post("/api/auth/login")
 async def login(user: UserLogin):
@@ -69,14 +68,30 @@ async def login(user: UserLogin):
         raise HTTPException(status_code=400, detail="Invalid username or password")
 
     # Kiểm tra mật khẩu
-    if not pwd_context.verify(user.password, db_user["password"]):  # Sửa hashed_password thành password
+    if not pwd_context.verify(user.password, db_user["password"]):
         raise HTTPException(status_code=400, detail="Invalid username or password")
 
-    # Chuyển đổi ObjectId thành chuỗi
+    # Chuyển ObjectId thành chuỗi
     db_user["_id"] = str(db_user["_id"])
 
-    # Trả về thông tin người dùng
-    return {"message": "Login successful", "user": db_user}
+    # Tạo token
+    token = create_access_token(data={"user_id": db_user["_id"]})
+
+    # Xóa password trước khi trả về user
+    db_user.pop("password", None)
+
+    # Tạo response
+    response = JSONResponse(content={
+        "message": "Login successful",
+        "access_token": token,  # <== THÊM vào đây
+        "user": db_user
+    })
+
+    # Gán cookie
+    set_cookie(response, token)
+
+    return response
+
 
 
 # Logout user

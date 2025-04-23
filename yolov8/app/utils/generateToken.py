@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from jose import jwt
+from jose import jwt, JWTError
 from fastapi.responses import JSONResponse
 
 SECRET_KEY = "5cTVA/L+hFrglonQyZiaKx31Llr0PNdDD/Z18MxS9w0=" 
@@ -25,3 +25,10 @@ def set_cookie(response: JSONResponse, token: str):
         samesite="strict",
         secure=True,  # Set to True in production
     )
+    
+def decode_jwt_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload.get("user_id")
+    except JWTError:
+        return None

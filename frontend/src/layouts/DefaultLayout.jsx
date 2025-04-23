@@ -4,21 +4,28 @@ import { Link } from "react-router-dom";
 import NavButton from "../components/NavButton";
 
 function DefaultLayout({ children }) {
+    const user = JSON.parse(localStorage.getItem("access_token"));
     return (
-        <Box display={"flex"}>
+        user && (
             <Box
                 display={"flex"}
                 flexDirection={"column"}
-                justifyContent={"space-between"}
                 alignItems={"center"}
-                width={"180px"}
-                height={"100vh"}
-                borderRight={"1px solid #ccc"}
             >
-                <Box>
+                <Box
+                    display={"flex"}
+                    justifyContent={"space-between"}
+                    alignItems={"center"}
+                    width={"100%"}
+                    height={"60px"}
+                    borderBottom={"1px solid #ccc"}
+                    position={"fixed"}
+                    backgroundColor={"#fff"}
+                >
                     <Box
                         component={Link}
                         to={"/"}
+                        marginRight={"16px"}
                         sx={{
                             padding: "20px",
                             color: "#000",
@@ -29,25 +36,48 @@ function DefaultLayout({ children }) {
                     >
                         Fire Detection
                     </Box>
-                    <Box display={"flex"} flexDirection={"column"}>
-                        <NavButton
-                            title={"Home"}
-                            link={"/"}
-                            icon={<i class="fa-regular fa-house fa-lg"></i>}
-                        />
-                        <NavButton
-                            title={"Dashboard"}
-                            link={"/dashboard"}
-                            icon={
-                                <i class="fa-regular fa-table-list fa-lg"></i>
-                            }
-                        />
+                    <Box
+                        display={"flex"}
+                        margin={"0px 16px"}
+                        height={"40px"}
+                        gap={2}
+                    >
+                        <NavButton title={"Home"} link={"/"} />
+                        <NavButton title={"Dashboard"} link={"/dashboard"} />
+                    </Box>
+                    <Box
+                        display={"flex"}
+                        alignItems={"center"}
+                        justifyContent={"space-between"}
+                        marginRight={"16px"}
+                    >
+                        <Box fontWeight={600} fontSize={"14px"}>
+                            {user.fullName}
+                        </Box>
+                        <Box
+                            fontWeight={600}
+                            fontSize={"14px"}
+                            bgcolor={"#efefef"}
+                            p={"12px 16px"}
+                            borderRadius={5}
+                            ml={2}
+                            sx={{
+                                cursor: "pointer",
+                                "&:hover": {
+                                    backgroundColor: "#000",
+                                    color: "#fff",
+                                },
+                            }}
+                        >
+                            Logout
+                        </Box>
                     </Box>
                 </Box>
-                <Box>Login</Box>
+                <Box width={"calc(100vw - 240px)"} marginTop={"60px"}>
+                    {children}
+                </Box>
             </Box>
-            <Box width={"calc(100vw - 180px)"}>{children}</Box>
-        </Box>
+        )
     );
 }
 

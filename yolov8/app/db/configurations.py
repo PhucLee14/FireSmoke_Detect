@@ -8,5 +8,6 @@ uri = "mongodb+srv://lhphucth14:ROKapVZRriM06aJx@cluster0.lxjrdat.mongodb.net/?r
 client = AsyncIOMotorClient(uri, tlsCAFile=certifi.where())
 
 # Chọn database và collection
-db = client["test"]  # Tên database là "test"
-users_collection = db["users"]  # Tên collection là "users"
+db = client["test"] 
+users_collection = db["users"]  
+detections_collection = db["detections"]

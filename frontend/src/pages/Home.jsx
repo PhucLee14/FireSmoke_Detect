@@ -71,9 +71,12 @@ function Home() {
     const handleWebcamDetection = async () => {
         try {
             const response = await axios.get(
-                "http://localhost:8000/detect/webcam/"
+                "http://localhost:8000/detect/webcam/",
+                {
+                    withCredentials: true,
+                }
             );
-            alert(response.data.message); // Hiển thị thông báo từ backend
+            alert(response.data.error);
         } catch (error) {
             console.error("Error starting webcam detection:", error);
             alert("Failed to start webcam detection.");
@@ -191,6 +194,9 @@ function Home() {
 
                         <button
                             onClick={handleUpload}
+                            // onClick={() => {
+                            //     console.log(file);
+                            // }}
                             style={{
                                 padding: "10px 20px",
                                 fontSize: "16px",
