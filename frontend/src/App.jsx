@@ -3,6 +3,7 @@ import DefaultLayout from "./layouts/DefaultLayout";
 import { Route, Routes } from "react-router-dom";
 import { privateRoutes, publicRoutes } from "./routes/Routes";
 import { Fragment } from "react";
+import PrivateRoute from "./utils/PrivateRoute";
 import { Toaster } from "react-hot-toast";
 
 function App() {
@@ -42,9 +43,11 @@ function App() {
                             key={index}
                             path={route.path}
                             element={
-                                <Layout>
-                                    <Page />
-                                </Layout>
+                                <PrivateRoute>
+                                    <Layout>
+                                        <Page />
+                                    </Layout>
+                                </PrivateRoute>
                             }
                         />
                     );

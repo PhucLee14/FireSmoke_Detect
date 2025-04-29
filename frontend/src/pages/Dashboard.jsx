@@ -123,11 +123,47 @@ function Dashboard() {
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
+        console.log("AnchorEl: ", event.currentTarget);
     };
 
-    const handleClose = (type) => {
+    const handleClose = async (type) => {
         setAnchorEl(null);
-        if (type) onSelect(type); // Gửi loại filter về parent
+        if (type) {
+            setDetectFilter(type);
+
+            try {
+                const res = await axios.get(
+                    `http://localhost:8000/detections/filter/by-type/${type}`
+                );
+                const data = res.data;
+                setDetections(data);
+
+                // 👉 Lấy danh sách user_ids để map lại userMap
+                const uniqueUserIds = [
+                    ...new Set(
+                        data.map((item) => item.user_id).filter(Boolean)
+                    ),
+                ];
+                const tempMap = {};
+
+                await Promise.all(
+                    uniqueUserIds.map(async (id) => {
+                        try {
+                            const res = await axios.get(
+                                `http://localhost:8000/api/user/${id}`
+                            );
+                            tempMap[id] = res.data.user?.userName || id;
+                        } catch {
+                            tempMap[id] = "Unknown";
+                        }
+                    })
+                );
+
+                setUserMap(tempMap);
+            } catch (err) {
+                console.error("❌ Lỗi khi filter theo type:", err);
+            }
+        }
     };
 
     return (

@@ -51,9 +51,13 @@ function DefaultLayout({ children }) {
                         justifyContent={"space-between"}
                         marginRight={"16px"}
                     >
-                        <Box fontWeight={600} fontSize={"14px"}>
-                            {user.fullName}
-                        </Box>
+                        {user ? (
+                            <Box fontWeight={600} fontSize={"14px"}>
+                                {user.fullName}
+                            </Box>
+                        ) : (
+                            ""
+                        )}
                         <Box
                             fontWeight={600}
                             fontSize={"14px"}
@@ -67,6 +71,10 @@ function DefaultLayout({ children }) {
                                     backgroundColor: "#000",
                                     color: "#fff",
                                 },
+                            }}
+                            onClick={() => {
+                                localStorage.removeItem("access_token");
+                                window.location.href = "/login";
                             }}
                         >
                             Logout
